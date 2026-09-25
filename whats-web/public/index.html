@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WhatsApp Web - É Elétrica</title>
+  <style>
+    :root {
+      --pt-azul: #12457e;
+      --pt-azul-claro: #2f7fd4;
+      --surface: #ffffff;
+      --border: #e2e8f0;
+      --ink: #1e293b;
+      --muted: #64748b;
+      --ok: #16a34a;
+      --bad: #dc2626;
+      --bg: #f1f5f9;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --surface: #1e293b;
+        --border: #334155;
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --bg: #0f172a;
+      }
+    }
+
+    :root[data-theme="dark"] {
+      --surface: #1e293b;
+      --border: #334155;
+      --ink: #e2e8f0;
+      --muted: #94a3b8;
+      --bg: #0f172a;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      margin: 0;
+      padding: 32px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      color: var(--pt-azul);
+      margin-bottom: 4px;
+    }
+
+    p.subtitle {
+      color: var(--muted);
+      margin-top: 0;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      width: 100%;
+      max-width: 480px;
+      margin-top: 24px;
+      text-align: center;
+    }
+
+    #qr-box img {
+      width: 260px;
+      height: 260px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--bad);
+    }
+
+    .dot.connected { background: var(--ok); }
+
+    .messages {
+      width: 100%;
+      max-width: 480px;
+      margin-top: 16px;
+    }
+
+    .msg {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--pt-azul-claro);
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      text-align: left;
+    }
+
+    .msg .name {
+      font-weight: 600;
+      color: var(--pt-azul);
+      font-size: 13px;
+    }
+
+    .msg .phone {
+      color: var(--muted);
+      font-size: 12px;
+      margin-left: 6px;
+    }
+
+    .msg .text {
+      margin-top: 4px;
+      font-size: 14px;
+    }
+
+    .empty {
+      color: var(--muted);
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <h1>WhatsApp Web</h1>
+  <p class="subtitle">Protótipo de teste — É Elétrica Engenharia</p>
+
+  <div class="card">
+    <div class="status">
+      <span class="dot" id="statusDot"></span>
+      <span id="statusText">Aguardando conexão...</span>
+    </div>
+    <div id="qr-box">
+      <p class="empty">Gerando QR Code...</p>
+    </div>
+  </div>
+
+  <div class="messages" id="messages">
+    <p class="empty">Nenhuma mensagem recebida ainda.</p>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    const qrBox = document.getElementById('qr-box');
+    const statusDot = document.getElementById('statusDot');
+    const statusText = document.getElementById('statusText');
+    const messagesEl = document.getElementById('messages');
+    let firstMessage = true;
+
+    socket.on('qr', (qrImage) => {
+      qrBox.innerHTML = `<img src="${qrImage}" alt="QR Code do WhatsApp" />
+        <p style="color: var(--muted); font-size: 13px; margin-top: 8px;">
+          Abra o WhatsApp no celular &rarr; Dispositivos conectados &rarr; Conectar um dispositivo
+        </p>`;
+    });
+
+    socket.on('status', ({ connected }) => {
+      statusDot.classList.toggle('connected', connected);
+      statusText.textContent = connected ? 'Conectado' : 'Desconectado';
+      if (connected) {
+        qrBox.innerHTML = '<p class="empty">Sessão conectada. Aguardando mensagens...</p>';
+      }
+    });
+
+    socket.on('message', (msg) => {
+      if (firstMessage) {
+        messagesEl.innerHTML = '';
+        firstMessage = false;
+      }
+      const el = document.createElement('div');
+      el.className = 'msg';
+      el.innerHTML = `
+        <span class="name">${msg.name}</span>
+        <span class="phone">(...${msg.last8})</span>
+        <div class="text">${msg.text}</div>
+      `;
+      messagesEl.prepend(el);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "name": "whats-web-crm",
+  "version": "1.0.0",
+  "description": "Sessao propria de WhatsApp Web (protótipo) para futura integração com o CRM da É Elétrica Engenharia",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "^6.7.9",
+    "express": "^4.19.2",
+    "pino": "^9.3.2",
+    "qrcode": "^1.5.3",
+    "socket.io": "^4.7.5"
+  }
+}
